@@ -86,9 +86,9 @@ def transcribe_audio(file_path, laughter_data_timestamp):
 
 def audio_to_transcription_and_timestamp(path_to_conversion):
     """
-    @julie: Take in a directory path and transcribe all audio files in that directory.
+    @julie: Take in a path to file to be converted (mp3/wav) and return json containing transcription and timestamps.
     input:
-    - path_to_conversion: path to the directory containing **1 only** audio files
+    - path_to_conversion: path to the directory containing **1 only** audio file
     return:
     - a JSON
     - json.text -> transcription
