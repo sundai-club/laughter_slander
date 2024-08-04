@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+cd `dirname $0`
+HOST=misc4.tkeith.com
+
+ssh "$HOST" "systemctl stop sundai-laughter && mkdir -p /opt/sundai-laughter"
+
+rsync -aH --delete --exclude=.git ./ "$HOST:/opt/sundai-laughter"
+
+ssh "$HOST" "systemctl daemon-reload && systemctl restart sundai-laughter"
