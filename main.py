@@ -10,6 +10,7 @@ import whisper
 import time
 import os
 from pydub import AudioSegment
+from src.laughter_detection.detect_laughter import process_audio_file
 
 app = Flask(__name__)
 
@@ -51,14 +52,14 @@ def upload_mp3():
         thread = Thread(target=process_audio, args=(file_path, task_id))
         thread.start()
 
-        return jsonify({"task_id": task_id}), 200
+        return jsonify({"taskId": task_id}), 200
 
     return jsonify({"error": "Invalid file format"}), 400
 
 
-@app.route('/status/<task_id>', methods=['GET'])
-def get_status(task_id):
-    task = tasks.get(task_id)
+@app.route('/status/<taskId>', methods=['GET'])
+def get_status(taskId):
+    task = tasks.get(taskId)
     if not task:
         return jsonify({"error": "Invalid task ID"}), 400
 
@@ -68,7 +69,7 @@ def get_status(task_id):
     return jsonify({"status": task['status']}), 200
 
 
-def detect_laughter(file_path) -> list[float]:
+def detect_laughter(file_path) -> dict:
     """
     Detect laughter timestamps in an audio file
     :param file_path: the path to the audio file
@@ -76,13 +77,18 @@ def detect_laughter(file_path) -> list[float]:
     """
     # Hypothetical function to detect laughter timestamps
     # Replace with actual implementation
-    return [5.0, 15.2, 22.5]
+    outputs = process_audio_file(file_path)
+    if outputs is not None:
+        return {'time_stamps': outputs[0], 'output_dir': outputs[1]}
+    return {'time_stamps': [], 'output_dir': ''}
+
 
 def transcribe_audio(file_path, laughter_data_timestamp):
     # @julie: use transcribe_audio_from_directory as a helper function. integrate it or make modifications when integrating
     # Hypothetical function to transcribe audio
     # Replace with actual implementation
     return "This is a sample transcription with laughter at the given point!!"
+
 
 def audio_to_transcription_and_timestamp(path_to_conversion):
     """
@@ -135,12 +141,11 @@ def truncate_jokes(text) -> str:
     # Replace with actual implementation
     return text[:1000]
 
+
 # TODO: remove this. Testing: Run the transcription function
 transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
 print(transcriptions)
 
-
 if __name__ == '__main__':
     print('Launching flask server...')
     app.run(debug=True, host='0.0.0.0', port=8000)
-    
