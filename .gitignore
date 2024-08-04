@@ -1,3 +1,6 @@
+data
+external_libs
+.DS_Store
 
 # Ignore Python virtual environment
 myenv/
