@@ -51,14 +51,14 @@ def upload_mp3():
         thread = Thread(target=process_audio, args=(file_path, task_id))
         thread.start()
 
-        return jsonify({"task_id": task_id}), 200
+        return jsonify({"taskId": task_id}), 200
 
     return jsonify({"error": "Invalid file format"}), 400
 
 
-@app.route('/status/<task_id>', methods=['GET'])
-def get_status(task_id):
-    task = tasks.get(task_id)
+@app.route('/status/<taskId>', methods=['GET'])
+def get_status(taskId):
+    task = tasks.get(taskId)
     if not task:
         return jsonify({"error": "Invalid task ID"}), 400
 
@@ -78,11 +78,13 @@ def detect_laughter(file_path) -> list[float]:
     # Replace with actual implementation
     return [5.0, 15.2, 22.5]
 
+
 def transcribe_audio(file_path, laughter_data_timestamp):
     # @julie: use transcribe_audio_from_directory as a helper function. integrate it or make modifications when integrating
     # Hypothetical function to transcribe audio
     # Replace with actual implementation
     return "This is a sample transcription with laughter at the given point!!"
+
 
 def audio_to_transcription_and_timestamp(path_to_conversion):
     """
@@ -135,12 +137,11 @@ def truncate_jokes(text) -> str:
     # Replace with actual implementation
     return text[:1000]
 
+
 # TODO: remove this. Testing: Run the transcription function
 transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
 print(transcriptions)
 
-
 if __name__ == '__main__':
     print('Launching flask server...')
     app.run(debug=True, host='0.0.0.0', port=8000)
-    
