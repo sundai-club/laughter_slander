@@ -10,6 +10,7 @@ import whisper
 import time
 import os
 from pydub import AudioSegment
+from src.laughter_detection.detect_laughter import process_audio_file
 
 app = Flask(__name__)
 
@@ -68,7 +69,7 @@ def get_status(task_id):
     return jsonify({"status": task['status']}), 200
 
 
-def detect_laughter(file_path) -> list[float]:
+def detect_laughter(file_path) -> dict:
     """
     Detect laughter timestamps in an audio file
     :param file_path: the path to the audio file
@@ -76,7 +77,10 @@ def detect_laughter(file_path) -> list[float]:
     """
     # Hypothetical function to detect laughter timestamps
     # Replace with actual implementation
-    return [5.0, 15.2, 22.5]
+    outputs = process_audio_file(file_path)
+    if outputs is not None:
+        return {'time_stamps': outputs[0], 'output_dir': outputs[1]}
+    return {'time_stamps': [], 'output_dir': ''}
 
 def transcribe_audio(file_path, laughter_data_timestamp):
     # @julie: use transcribe_audio_from_directory as a helper function. integrate it or make modifications when integrating
