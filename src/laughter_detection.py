@@ -4,6 +4,7 @@ Just trying to run laughter-detection end-to-end
 
 import dataclasses
 import numpy as np
+import os
 import librosa
 import torch
 import scipy
@@ -22,6 +23,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 THRESHOLD = 0.5
 MIN_LENGTH = 0.2
 OUTPUT_DIR = './outputs'
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 @dataclasses.dataclass
