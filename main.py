@@ -84,7 +84,7 @@ def transcribe_audio(file_path, laughter_data_timestamp):
     # Replace with actual implementation
     return "This is a sample transcription with laughter at the given point!!"
 
-def audio_to_transcription_and_timesramp(path_to_conversion):
+def audio_to_transcription_and_timestamp(path_to_conversion):
     """
     @julie: Take in a directory path and transcribe all audio files in that directory.
     input:
@@ -136,7 +136,7 @@ def truncate_jokes(text) -> str:
     return text[:1000]
 
 # TODO: remove this. Testing: Run the transcription function
-transcriptions = audio_to_transcription_and_timesramp("test_audio.mp3")
+transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
 print(transcriptions)
 
 
