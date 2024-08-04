@@ -132,6 +132,14 @@ def transcribe_audio_from_directory(directory_path):
     # Convert results to JSON format
     return json.dumps(results, indent=2)
 
+def truncate_jokes(text) -> str:
+    """
+    @julie: Truncate jokes in the text to a certain length, given a truncated transcription
+    """
+    # Hypothetical function to truncate jokes
+    # Replace with actual implementation
+    return text[:1000]
+
 # testing
 transcriptions_json = transcribe_audio_from_directory("audio_chunks/task_id_0/")
 print(transcriptions_json)
