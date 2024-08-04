@@ -33,7 +33,7 @@ def parse_audio_at_timestamps(audio_path, timestamps, duration=60000):
         segment.export(f"{folder_name}/segment_{i}.mp3", format="mp3")
 
 # Example usage
-audio_path = "/Users/cozyshu/Desktop/test_audio.mp3"
+audio_path = "./test_audio.mp3"
 timestamps = [61000, 90000]  # Timestamps in milliseconds
 
 parse_audio_at_timestamps(audio_path, timestamps)
