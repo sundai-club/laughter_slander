@@ -1,9 +1,15 @@
+import json
 import os
 import tempfile
+import time
 import uuid
 from flask import Flask, request, jsonify
 from threading import Thread
 from time import sleep
+import whisper
+import time
+import os
+from pydub import AudioSegment
 
 app = Flask(__name__)
 
@@ -72,12 +78,64 @@ def detect_laughter(file_path) -> list[float]:
     # Replace with actual implementation
     return [5.0, 15.2, 22.5]
 
-
 def transcribe_audio(file_path, laughter_data_timestamp):
+    # @julie: use transcribe_audio_from_directory as a helper function. integrate it or make modifications when integrating
     # Hypothetical function to transcribe audio
     # Replace with actual implementation
     return "This is a sample transcription with laughter at the given point!!"
 
 
+def transcribe_audio_from_directory(directory_path):
+    """
+    @julie: Take in a directory path and transcribe all audio files in that directory. return in json format
+    """
+
+    # Load the Whisper model
+    model = whisper.load_model("base")
+    
+    # Prepare to collect results
+    results = []
+    
+    # List all files in the given directory
+    audio_files = [f for f in os.listdir(directory_path) if f.endswith('.mp3') or f.endswith('.wav')]
+    
+    # Process each audio file in the directory
+    for filename in audio_files:
+        file_path = os.path.join(directory_path, filename)
+        
+        # Start timing the transcription process
+        start_time = time.time()
+
+        # Load the audio file and transcribe
+        result = model.transcribe(file_path)
+
+        # Calculate transcription time
+        elapsed_time = time.time() - start_time
+
+        # Load audio to get duration using pydub (requires ffmpeg)
+        audio = AudioSegment.from_file(file_path)
+        length_seconds = len(audio) / 1000
+
+        # Store result and metadata
+        results.append({
+            'file': filename,
+            'transcription': result["text"],
+            'transcription_time': elapsed_time,
+            'audio_length': length_seconds
+        })
+
+        print(f"File: {filename}")
+        print(f"Transcription: {result['text']}")
+        print(f"Transcription took: {elapsed_time:.2f} seconds")
+        print(f"Length of audio: {length_seconds} seconds\n")
+
+    # Convert results to JSON format
+    return json.dumps(results, indent=2)
+
+# testing
+transcriptions_json = transcribe_audio_from_directory("audio_chunks/task_id_0/")
+print(transcriptions_json)
+
 if __name__ == '__main__':
     app.run(debug=True)
+    
