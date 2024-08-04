@@ -1,3 +1,12 @@
 data
 external_libs
 .DS_Store
+
+# Ignore Python virtual environment
+myenv/
+myenv/lib/*
+
+# Ignore specific large files
+myenv/lib/python3.9/site-packages/llvmlite/binding/libllvmlite.dylib
+myenv/lib/python3.9/site-packages/numpy/.dylibs/libopenblas64_.0.dylib
+myenv/lib/python3.9/site-packages/torch/lib/libtorch_cpu.dylibmyenv/
