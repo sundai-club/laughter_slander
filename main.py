@@ -84,53 +84,48 @@ def transcribe_audio(file_path, laughter_data_timestamp):
     # Replace with actual implementation
     return "This is a sample transcription with laughter at the given point!!"
 
-
-def transcribe_audio_from_directory(directory_path):
+def audio_to_transcription_and_timesramp(path_to_conversion):
     """
-    @julie: Take in a directory path and transcribe all audio files in that directory. return in json format
+    @julie: Take in a directory path and transcribe all audio files in that directory.
+    input:
+    - path_to_conversion: path to the directory containing **1 only** audio files
+    return:
+    - a JSON
+    - json.text -> transcription
+    - json.segments -> list of token(word or terms) and timestamps
     """
 
     # Load the Whisper model
     model = whisper.load_model("base")
-    
-    # Prepare to collect results
-    results = []
-    
-    # List all files in the given directory
-    audio_files = [f for f in os.listdir(directory_path) if f.endswith('.mp3') or f.endswith('.wav')]
-    
-    # Process each audio file in the directory
-    for filename in audio_files:
-        file_path = os.path.join(directory_path, filename)
-        
-        # Start timing the transcription process
-        start_time = time.time()
 
-        # Load the audio file and transcribe
-        result = model.transcribe(file_path)
+    # Start timing the transcription process
+    start_time = time.time()
 
-        # Calculate transcription time
-        elapsed_time = time.time() - start_time
+    # Load the audio file and transcribe
+    result = model.transcribe(path_to_conversion, word_timestamps=True)
 
-        # Load audio to get duration using pydub (requires ffmpeg)
-        audio = AudioSegment.from_file(file_path)
-        length_seconds = len(audio) / 1000
+    # Calculate transcription time
+    elapsed_time = time.time() - start_time
 
-        # Store result and metadata
-        results.append({
-            'file': filename,
-            'transcription': result["text"],
-            'transcription_time': elapsed_time,
-            'audio_length': length_seconds
-        })
+    # Load audio to get duration using pydub (requires ffmpeg)
+    audio = AudioSegment.from_file(path_to_conversion)
+    length_seconds = len(audio) / 1000
 
-        print(f"File: {filename}")
-        print(f"Transcription: {result['text']}")
-        print(f"Transcription took: {elapsed_time:.2f} seconds")
-        print(f"Length of audio: {length_seconds} seconds\n")
+    # Store result and metadata
+    transcription_result = {
+        'file': path_to_conversion,
+        'transcription': result["text"],
+        'transcription_time': elapsed_time,
+        'audio_length': length_seconds
+    }
 
-    # Convert results to JSON format
-    return json.dumps(results, indent=2)
+    print(f"File: {path_to_conversion}")
+    print(f"Transcription: {result}")
+    print(f"Transcription took: {elapsed_time:.2f} seconds")
+    print(f"Length of audio: {length_seconds} seconds\n")
+
+    return transcription_result
+
 
 def truncate_jokes(text) -> str:
     """
@@ -140,9 +135,10 @@ def truncate_jokes(text) -> str:
     # Replace with actual implementation
     return text[:1000]
 
-# testing
-transcriptions_json = transcribe_audio_from_directory("audio_chunks/task_id_0/")
-print(transcriptions_json)
+# TODO: remove this. Testing: Run the transcription function
+transcriptions = audio_to_transcription_and_timesramp("test_audio.mp3")
+print(transcriptions)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
