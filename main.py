@@ -10,7 +10,7 @@ import whisper
 import time
 import os
 from pydub import AudioSegment
-from src.laughter_detection.detect_laughter import process_audio_file
+from src.laughter_detection import detect_laughter
 import os
 from openai import OpenAI
 from dotenv import load_dotenv, find_dotenv
@@ -176,10 +176,9 @@ def detect_laughter(file_path) -> dict:
     """
     # Hypothetical function to detect laughter timestamps
     # Replace with actual implementation
-    outputs = process_audio_file(file_path)
-    if outputs is not None:
-        return {'time_stamps': outputs[0], 'output_dir': outputs[1]}
-    return {'time_stamps': [], 'output_dir': ''}
+    outputs = detect_laughter(file_path)
+    outputs = [x__dict__ for x in outputs]
+    return outputs
 
 
 def transcribe_audio(file_path, laughter_data_timestamp):
