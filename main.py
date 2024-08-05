@@ -48,8 +48,8 @@ def combine_laughter_and_transcript(laughter_data, whisper_transcriptions):
 
     # Add laughter events to all_events
     for laugh in laughter_data:
-        start = laugh['start']
-        end = laugh['end']
+        start = laugh['start_ts']
+        end = laugh['end_ts']
         duration = end - start
         num_laughs = int(duration)  # One [Laughter] tag per second
         all_events.append({
@@ -78,58 +78,55 @@ def combine_laughter_and_transcript(laughter_data, whisper_transcriptions):
 
     return "\n".join(combined_transcript)
 
+
 def process_audio(file_path, task_id):
+
+    # Combine transcript
+    laughter_data = detect_laughter_api(file_path)
+
+    whisper_transcriptions = audio_to_transcription_and_timestamp(file_path)
+
+    combined_transcript = combine_laughter_and_transcript(laughter_data, whisper_transcriptions)
+    print(combined_transcript)
+
+    # Pass to LLM
+    import json
+    prompt = "Here is the combined transcript for our conversation " + combined_transcript + " It's your job to chunk it into funny segments. Some segments may have multiple laughter interruptions within them. Each segment should include earlier parts of transcript that are relevant to make it maximally funny. For each segment, output a json object with {startTimeStamp: , endTimeStamp: , text: }. Only output a list of json objects."
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    chat_response = response.choices[0].message.content
+    chat_response = chat_response[chat_response.find('['):chat_response.rfind(']')+1]
+
+    print(chat_response)
+
+    # Parse response into json and, calculate duration and return
+    if chat_response:
+        try:
+            json_list = json.loads(chat_response)
+            for json_obj in json_list:
+                start_time = json_obj.get('startTimeStamp')
+                end_time = json_obj.get('endTimeStamp')
+                
+                if start_time is not None and end_time is not None:
+                    # Convert timestamps to floats before subtraction
+                    duration_sec = float(end_time) - float(start_time)  
+                    json_obj['durationSec'] = duration_sec
+                    json_obj['startSec'] = start_time
+
+            print(json_list)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            json_list = []
+    else:
+        json_list = []
+        print("GPT model returned an empty response.")
   
-  # Combine transcript
-  laughter_data = detect_laughter(file_path)
-
-  whisper_transcriptions = audio_to_transcription_and_timestamp(file_path)
-
-  combined_transcript = combine_laughter_and_transcript(laughter_data, whisper_transcriptions)
-  print(combined_transcript)
-  
-  # Pass to LLM
-  import json
-  prompt = "Here is the combined transcript for our conversation " + combined_transcript + " It's your job to chunk it into funny segments. Some segments may have multiple laughter interruptions within them. Each segment should include earlier parts of transcript that are relevant to make it maximally funny. For each segment, output a json object with {startTimeStamp: , endTimeStamp: , text: }. Only output a list of json objects."
-  response = client.chat.completions.create(
-      model="gpt-4o",
-      messages=[{"role": "user", "content": prompt}],
-  )
-  chat_response = response.choices[0].message.content
-  chat_response = cleaned_string = chat_response.strip().removeprefix('```json').removesuffix('```')
-  print(chat_response)
-
-  # Parse response into json and, calculate duration and return
-  if chat_response:
-      try:
-          json_list = json.loads(chat_response)
-          for json_obj in json_list:
-            start_time = json_obj.get('startTimeStamp')
-            end_time = json_obj.get('endTimeStamp')
-            
-            if start_time is not None and end_time is not None:
-              # Convert timestamps to floats before subtraction
-              duration_sec = float(end_time) - float(start_time)  
-              json_obj['durationSec'] = duration_sec
-              json_obj['startSec'] = start_time
-
-          print(json_list)
-          return json_list
-      except json.JSONDecodeError as e:
-          print(f"Error decoding JSON: {e}")
-          json_list = []
-          return json_list
-  else:
-      json_list = []
-      print("GPT model returned an empty response.")
-      return json_list
-  
-
-    # tasks[task_id]['status'] = 'completed'
-    # tasks[task_id]['result'] = {
-    #     "laughter_timestamps": laughter_data,
-    #     "laughter_transcriptions": laughter_transcriptions
-    # }
+    tasks[task_id]['status'] = 'completed'
+    tasks[task_id]['result'] = {
+        "data": {"highlights": json_list},
+    }
 
 @app.route('/upload', methods=['POST'])
 def upload_mp3():
@@ -168,7 +165,7 @@ def get_status(taskId):
     return jsonify({"status": task['status']}), 200
 
 
-def detect_laughter(file_path) -> dict:
+def detect_laughter_api(file_path) -> dict:
     """
     Detect laughter timestamps in an audio file
     :param file_path: the path to the audio file
@@ -241,8 +238,8 @@ def truncate_jokes(text) -> str:
 
 
 # TODO: remove this. Testing: Run the transcription function
-transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
-print(transcriptions)
+# transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
+# print(transcriptions)
 
 if __name__ == '__main__':
     print('Launching flask server...')
