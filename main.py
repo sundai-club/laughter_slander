@@ -29,8 +29,9 @@ tasks = {}
 
 
 def combine_laughter_and_transcript(laughter_data, whisper_transcriptions):
+    print('whisper_transcriptions', whisper_transcriptions)
     # Extract the text and segments from whisper_transcriptions
-    transcript = whisper_transcriptions['text']
+    # transcript = whisper_transcriptions['text']
     segments = whisper_transcriptions['segments']
 
     # Create a list to store all events (speech and laughter)
@@ -174,7 +175,7 @@ def detect_laughter_api(file_path) -> dict:
     # Hypothetical function to detect laughter timestamps
     # Replace with actual implementation
     outputs = detect_laughter(file_path)
-    outputs = [x__dict__ for x in outputs]
+    outputs = [x.__dict__ for x in outputs]
     return outputs
 
 
@@ -217,7 +218,8 @@ def audio_to_transcription_and_timestamp(path_to_conversion):
         'file': path_to_conversion,
         'transcription': result["text"],
         'transcription_time': elapsed_time,
-        'audio_length': length_seconds
+        'audio_length': length_seconds,
+        'segments': result['segments']
     }
 
     print(f"File: {path_to_conversion}")
