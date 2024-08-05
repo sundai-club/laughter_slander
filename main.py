@@ -241,8 +241,8 @@ def truncate_jokes(text) -> str:
 
 
 # TODO: remove this. Testing: Run the transcription function
-transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
-print(transcriptions)
+# transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
+# print(transcriptions)
 
 if __name__ == '__main__':
     print('Launching flask server...')
