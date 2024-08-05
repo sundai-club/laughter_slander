@@ -76,7 +76,7 @@ def generate_joke_txt(file_path,custom_prompt):
 # Customize your prompt
     # Get the analysis from the API
     response_text = analyze_text(file_path, custom_prompt)
-    output_file = "full_joke.txt"
+    output_file = "./data/full_joke.txt"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(response_text)
     print (f"All jokes: {response_text}")
