@@ -11,26 +11,125 @@ import time
 import os
 from pydub import AudioSegment
 from src.laughter_detection.detect_laughter import process_audio_file
+import os
+from openai import OpenAI
+from dotenv import load_dotenv, find_dotenv
+import json
+
+# Locate the .env file and load environment variables
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+client = OpenAI()
 
 app = Flask(__name__)
 
 tasks = {}
 
 
+def combine_laughter_and_transcript(laughter_data, whisper_transcriptions):
+    # Extract the text and segments from whisper_transcriptions
+    transcript = whisper_transcriptions['text']
+    segments = whisper_transcriptions['segments']
+
+    # Create a list to store all events (speech and laughter)
+    all_events = []
+
+    # Add speech segments to all_events
+    for segment in segments:
+        all_events.append({
+            'type': 'speech',
+            'start': segment['start'],
+            'end': segment['end'],
+            'text': segment['text']
+        })
+
+
+    # Add laughter events to all_events
+    for laugh in laughter_data:
+        start = laugh['start']
+        end = laugh['end']
+        duration = end - start
+        num_laughs = int(duration)  # One [Laughter] tag per second
+        all_events.append({
+            'type': 'laughter',
+            'start': start,
+            'end': end,
+            'text': '[Laughter]'
+        })
+
+        # for i in range(num_laughs):
+        #     all_events.append({
+        #         'type': 'laughter',
+        #         'start': start + i,
+        #         'end': start + i + 1,
+        #         'text': '[Laughter]'
+        #     })
+
+    # Sort all events by start time
+    all_events.sort(key=lambda x: x['start'])
+
+    # Combine events into a single transcript
+    combined_transcript = []
+    for event in all_events:
+        timestamp = f"[{event['start']:.2f}-{event['end']:.2f}]"
+        combined_transcript.append(f"{timestamp} {event['text']}")
+
+    return "\n".join(combined_transcript)
+
 def process_audio(file_path, task_id):
-    sleep(1)  # Simulate a long-running process
-    laughter_data = detect_laughter(file_path)
-    laughter_transcriptions = []
+  
+  # Combine transcript
+  laughter_data = detect_laughter(file_path)
 
-    for laughter_data_timestamp in laughter_data:
-        laughter_transcriptions.append(transcribe_audio(file_path, laughter_data_timestamp))
+  whisper_transcriptions = audio_to_transcription_and_timestamp(file_path)
 
-    tasks[task_id]['status'] = 'completed'
-    tasks[task_id]['result'] = {
-        "laughter_timestamps": laughter_data,
-        "laughter_transcriptions": laughter_transcriptions
-    }
+  combined_transcript = combine_laughter_and_transcript(laughter_data, whisper_transcriptions)
+  print(combined_transcript)
+  
+  # Pass to LLM
+  import json
+  prompt = "Here is the combined transcript for our conversation " + combined_transcript + " It's your job to chunk it into funny segments. Some segments may have multiple laughter interruptions within them. Each segment should include earlier parts of transcript that are relevant to make it maximally funny. For each segment, output a json object with {startTimeStamp: , endTimeStamp: , text: }. Only output a list of json objects."
+  response = client.chat.completions.create(
+      model="gpt-4o",
+      messages=[{"role": "user", "content": prompt}],
+  )
+  chat_response = response.choices[0].message.content
+  chat_response = cleaned_string = chat_response.strip().removeprefix('```json').removesuffix('```')
+  print(chat_response)
 
+  # Parse response into json and, calculate duration and return
+  if chat_response:
+      try:
+          json_list = json.loads(chat_response)
+          for json_obj in json_list:
+            start_time = json_obj.get('startTimeStamp')
+            end_time = json_obj.get('endTimeStamp')
+            
+            if start_time is not None and end_time is not None:
+              # Convert timestamps to floats before subtraction
+              duration_sec = float(end_time) - float(start_time)  
+              json_obj['durationSec'] = duration_sec
+              json_obj['startSec'] = start_time
+
+          print(json_list)
+          return json_list
+      except json.JSONDecodeError as e:
+          print(f"Error decoding JSON: {e}")
+          json_list = []
+          return json_list
+  else:
+      json_list = []
+      print("GPT model returned an empty response.")
+      return json_list
+  
+
+    # tasks[task_id]['status'] = 'completed'
+    # tasks[task_id]['result'] = {
+    #     "laughter_timestamps": laughter_data,
+    #     "laughter_transcriptions": laughter_transcriptions
+    # }
 
 @app.route('/upload', methods=['POST'])
 def upload_mp3():
