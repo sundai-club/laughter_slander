@@ -237,11 +237,12 @@ def truncate_jokes(text) -> str:
     return text[:1000]
 
 
-# TODO: remove this. Testing: Run the transcription function
-# transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
-# print(transcriptions)
-
 if __name__ == '__main__':
-    print('Launching flask server...')
-    # app.run(debug=True, host='0.0.0.0', port=8000)
-    app.run(host='0.0.0.0', port=8000)
+    if os.environ.get('TEST_MODE', 'false').lower() == 'true':
+        print("Running in test mode...")
+        transcriptions = audio_to_transcription_and_timestamp("test_audio.mp3")
+        print('transcriptions', transcriptions)
+    else:
+        print('Launching flask server...')
+        # app.run(debug=True, host='0.0.0.0', port=8000)
+        app.run(host='0.0.0.0', port=8000)
