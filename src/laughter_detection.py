@@ -26,19 +26,7 @@ OUTPUT_DIR = './outputs'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-@dataclasses.dataclass
-class LaughterDetectionOutput:
-  wav_filename: str
-  start_ts: float
-  end_ts: float
-
-def detect_laughter(audio_path: str) -> list[LaughterDetectionOutput]:
-  y, _ = librosa.load(audio_path, sr=SAMPLE_RATE)
-  S = librosa.feature.melspectrogram(y=y, sr=SAMPLE_RATE, hop_length=HOP_LENGTH).T
-  features = librosa.amplitude_to_db(S, ref=np.max)
-  print('Features')
-  print(features)
-
+def predict(features: np.ndarray) -> list[float]:
   # set from here till probs on Modal
   model = models.ResNetBigger(
     dropout_rate=0.0,
@@ -61,6 +49,23 @@ def detect_laughter(audio_path: str) -> list[LaughterDetectionOutput]:
     preds = [float(preds)] if len(preds.shape) == 0 else list(preds)
     probs += preds
 
+  return probs
+
+
+@dataclasses.dataclass
+class LaughterDetectionOutput:
+  wav_filename: str
+  start_ts: float
+  end_ts: float
+
+def detect_laughter(audio_path: str) -> list[LaughterDetectionOutput]:
+  y, _ = librosa.load(audio_path, sr=SAMPLE_RATE)
+  S = librosa.feature.melspectrogram(y=y, sr=SAMPLE_RATE, hop_length=HOP_LENGTH).T
+  features = librosa.amplitude_to_db(S, ref=np.max)
+  print('Features')
+  print(features)
+
+  probs = predict(features)
   probs = np.array(probs)
 
   # Apply butterworth lowpass filter
