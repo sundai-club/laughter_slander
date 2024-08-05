@@ -1,4 +1,0 @@
-{
-  "joke_1": "My name is Kuo Wang. But to most people, I am known as Hu, which is actually my mother's maiden name. And the answer to my credit card security question. But joking aside, I just want to reassure everybody that I am invited here tonight. I grew up in China. Who didn't? And my childhood memories are totally ruined.",
-  "joke_2": "When I was in elementary school, as part of the curriculum, I had to work at a rice paddy right next to a quarry where they used explosives to break rocks. And that is where I learned that a light travels faster than sound."
-}
