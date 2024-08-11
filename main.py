@@ -129,8 +129,14 @@ def process_audio(file_path, task_id):
         "data": {"highlights": json_list},
     }
 
+@app.route('/strategies', methods=['GET'])
+def get_strategies():
+    return jsonify({"strategies": ['new', 'old']})
+
 @app.route('/upload', methods=['POST'])
 def upload_mp3():
+    strategy = request.args.get('strategy', 'new') # options are old, new
+
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
 
