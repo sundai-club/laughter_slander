@@ -83,20 +83,30 @@ def combine_laughter_and_transcript(laughter_data, whisper_transcriptions):
 def process_audio(file_path, task_id):
 
     # Combine transcript
+    start = time.monotonic()
     laughter_data = detect_laughter_api(file_path)
+    end = time.monotonic()
+    print(f'Task id: [{task_id}] | Laughter Detection took: "{end-start} secs"')
 
+    start = time.monotonic()
     whisper_transcriptions = audio_to_transcription_and_timestamp(file_path)
+    end = time.monotonic()
+    print(f'Task id: [{task_id}] | Laughter Detection took: "{end-start} secs"')
 
     combined_transcript = combine_laughter_and_transcript(laughter_data, whisper_transcriptions)
     print(combined_transcript)
 
     # Pass to LLM
+    start = time.monotonic()
     import json
     prompt = "Here is the combined transcript for our conversation " + combined_transcript + " It's your job to chunk it into funny segments. Some segments may have multiple laughter interruptions within them. Each segment should include earlier parts of transcript that are relevant to make it maximally funny. For each segment, output a json object with {startTimeStamp: , endTimeStamp: , text: }. Only output a list of json objects."
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
     )
+    end = time.monotonic()
+    print(f'Task id: [{task_id}] | LLM Call for joke extraction took: "{end-start} secs"')
+
     chat_response = response.choices[0].message.content
     chat_response = chat_response[chat_response.find('['):chat_response.rfind(']')+1]
 
@@ -192,6 +202,8 @@ def transcribe_audio(file_path, laughter_data_timestamp):
     return "This is a sample transcription with laughter at the given point!!"
 
 
+# update (rohan): moved whisper model out of function to initialize at runtime
+WHISPER_MODEL = whisper.load_model('base')
 def audio_to_transcription_and_timestamp(path_to_conversion):
     """
     @julie: Take in a path to file to be converted (mp3/wav) and return json containing transcription and timestamps.
@@ -202,15 +214,11 @@ def audio_to_transcription_and_timestamp(path_to_conversion):
     - json.text -> transcription
     - json.segments -> list of token(word or terms) and timestamps
     """
-
-    # Load the Whisper model
-    model = whisper.load_model("base")
-
     # Start timing the transcription process
     start_time = time.time()
 
     # Load the audio file and transcribe
-    result = model.transcribe(path_to_conversion, word_timestamps=True)
+    result = WHISPER_MODEL.transcribe(path_to_conversion, word_timestamps=True)
 
     # Calculate transcription time
     elapsed_time = time.time() - start_time
